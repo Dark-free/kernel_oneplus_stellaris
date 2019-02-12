@@ -6853,7 +6853,8 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int 
 		bool idle = true;
 
 		for_each_cpu(cpu, cpu_smt_mask(core)) {
-			if (!available_idle_cpu(cpu)) {
+			__cpumask_clear_cpu(cpu, cpus);
+			if (!available_idle_cpu(cpu))
 				idle = false;
 				break;
 			}
@@ -7866,14 +7867,9 @@ static void find_best_target(struct sched_domain *sd, cpumask_t *cpus,
 
 	} while (sg = sg->next, sg != start_sd->groups);
 
-<<<<<<< HEAD
 	/* If a compatible crucial CPU was found, use it and skip the backup path */
 	if (crucial && (crucial_cpu != -1)) {
 		target_cpu = crucial_cpu;
-=======
-	if (prefer_idle && (best_idle_cpu != -1)) {
-		target_cpu = best_idle_cpu;
->>>>>>> dec4c2301e51 (sched/fair: refine some scheduler changes from AU drop)
 		goto target;
 	}
 
@@ -11638,7 +11634,7 @@ more_balance:
 		if ((env.flags & LBF_DST_PINNED) && env.imbalance > 0) {
 
 			/* Prevent to re-select dst_cpu via env's CPUs */
-			cpumask_clear_cpu(env.dst_cpu, env.cpus);
+			__cpumask_clear_cpu(env.dst_cpu, env.cpus);
 
 			env.dst_rq	 = cpu_rq(env.new_dst_cpu);
 			env.dst_cpu	 = env.new_dst_cpu;
@@ -11665,7 +11661,7 @@ more_balance:
 
 		/* All tasks on this runqueue were pinned by CPU affinity */
 		if (unlikely(env.flags & LBF_ALL_PINNED)) {
-			cpumask_clear_cpu(cpu_of(busiest), cpus);
+			__cpumask_clear_cpu(cpu_of(busiest), cpus);
 			/*
 			 * Attempting to continue load balancing at the current
 			 * sched_domain level only makes sense if there are
@@ -12441,7 +12437,7 @@ void nohz_balance_exit_idle(struct rq *rq)
 		return;
 
 	rq->nohz_tick_stopped = 0;
-	cpumask_clear_cpu(rq->cpu, nohz.idle_cpus_mask);
+	__cpumask_clear_cpu(rq->cpu, nohz.idle_cpus_mask);
 	atomic_dec(&nohz.nr_cpus);
 
 	set_cpu_sd_state_busy(rq->cpu);
@@ -12489,7 +12485,7 @@ void nohz_balance_enter_idle(int cpu)
 	}
 
 #ifdef CONFIG_SONY_SCHED
-	cpumask_clear_cpu(cpu, &cpu_wclaimed_mask);
+	__cpumask_clear_cpu(cpu, &cpu_wclaimed_mask);
 #endif
 
 	/* Spare idle load balancing on CPUs that don't want to be disturbed: */
