@@ -588,7 +588,7 @@ static ssize_t writeback_store(struct device *dev,
 	struct bio bio;
 	struct bio_vec bio_vec;
 	struct page *page;
-	ssize_t ret;
+	ssize_t ret = len;
 	unsigned long element = 0;
 	int mode;
 
@@ -724,7 +724,6 @@ next:
 
 	if (element)
 		free_block_bdev(zram, element);
-	ret = len;
 	__free_page(page);
 	ksys_sync();
 release_init_lock:
