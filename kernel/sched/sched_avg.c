@@ -240,6 +240,8 @@ u64 sched_lpm_disallowed_time(int cpu)
 	
 	return 0;
 
+	return 0;
+
 	if (now < bias_end_time)
 		return bias_end_time - now;
 
