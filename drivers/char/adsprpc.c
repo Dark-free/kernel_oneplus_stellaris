@@ -228,6 +228,11 @@ struct secure_vm {
 	int vmcount;
 };
 
+struct qos_cores {
+	int *coreno;
+	int corecount;
+};
+
 struct fastrpc_file;
 
 struct fastrpc_buf {
@@ -381,6 +386,7 @@ struct fastrpc_apps {
 	struct wakeup_source *wake_source_secure;
 	/* Non-secure subsystem like CDSP will use regular client */
 	struct wakeup_source *wake_source;
+	struct qos_cores silvercores;
 	uint32_t max_size_limit;
 	void *ramdump_handle;
 	bool enable_ramdump;
@@ -4321,6 +4327,8 @@ static int fastrpc_internal_control(struct fastrpc_file *fl,
 {
 	int err = 0;
 	unsigned int latency;
+	struct fastrpc_apps *me = &gfa;
+	u32 len = me->silvercores.corecount, i = 0;
 
 	VERIFY(err, !IS_ERR_OR_NULL(fl) && !IS_ERR_OR_NULL(fl->apps));
 	if (err)
@@ -4336,8 +4344,11 @@ static int fastrpc_internal_control(struct fastrpc_file *fl,
 		VERIFY(err, latency != 0);
 		if (err)
 			goto bail;
+		atomic_set(&fl->pm_qos_req.cpus_affine, cpu_lp_mask);
+		for (i = 0; i < len; i++)
+			atomic_or(BIT(me->silvercores.coreno[i]),
+				  &fl->pm_qos_req.cpus_affine);
 		fl->pm_qos_req.type = PM_QOS_REQ_AFFINE_CORES;
-		cpumask_copy(&fl->pm_qos_req.cpus_affine, cpu_lp_mask);
 
 		mutex_lock(&fl->pm_qos_mutex);
 		if (!fl->qos_request) {
